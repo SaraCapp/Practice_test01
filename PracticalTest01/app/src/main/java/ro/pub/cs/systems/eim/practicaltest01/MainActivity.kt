@@ -1,15 +1,31 @@
 package ro.pub.cs.systems.eim.practicaltest01
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.result.contract.ActivityResultContracts
 
 class MainActivity : AppCompatActivity() {
 
-    // Variabile care retin numarul de apasari
+    // Contoarele noastre
     private var count1 = 0
     private var count2 = 0
+
+    // Primim raspunsul de la a doua activitate
+    private val secondaryLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+
+        if (result.resultCode == Activity.RESULT_OK) {
+            Toast.makeText(this, "OK", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "CANCEL", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,24 +38,54 @@ class MainActivity : AppCompatActivity() {
         val firstCounter = findViewById<TextView>(R.id.firstCounter)
         val secondCounter = findViewById<TextView>(R.id.secondCounter)
 
-        // 2. Cand apasam primul buton
+        val navigateButton = findViewById<Button>(R.id.navigateButton)
+
+        // 2. Restauram contoarele dupa recrearea activitatii
+        if (savedInstanceState != null) {
+            count1 = savedInstanceState.getInt("count1", 0)
+            count2 = savedInstanceState.getInt("count2", 0)
+        }
+
+        firstCounter.text = count1.toString()
+        secondCounter.text = count2.toString()
+
+        // 3. Primul buton
         firstButton.setOnClickListener {
-
-            // Crestem primul contor cu 1
             count1++
-
-            // Actualizam textul de pe ecran
             firstCounter.text = count1.toString()
         }
 
-        // 3. Cand apasam al doilea buton
+        // 4. Al doilea buton
         secondButton.setOnClickListener {
-
-            // Crestem al doilea contor cu 1
             count2++
-
-            // Actualizam textul de pe ecran
             secondCounter.text = count2.toString()
         }
+
+        // 5. Navigam la a doua activitate
+        navigateButton.setOnClickListener {
+
+            // Calculam suma
+            val total = count1 + count2
+
+            // Pregatim Intent-ul
+            val intent = Intent(
+                this,
+                PracticalTest01SecondaryActivity::class.java
+            )
+
+            // Trimitem suma
+            intent.putExtra("TOTAL_CLICKS", total)
+
+            // Deschidem activitatea si asteptam rezultatul
+            secondaryLauncher.launch(intent)
+        }
+    }
+
+    // 6. Salvam valorile contoarelor
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putInt("count1", count1)
+        outState.putInt("count2", count2)
+
+        super.onSaveInstanceState(outState)
     }
 }
